@@ -56,7 +56,7 @@ RUN python3 setup.py build && \
 WORKDIR /home/minecraft/
 
 COPY config/config.py /home/minecraft/config.py
-COPY entrypoint.sh /home/minecraft/render.sh
+COPY render.sh /home/minecraft/render.sh
 COPY download_url.py /home/minecraft/download_url.py
 COPY download_client.sh /home/minecraft/download_client.sh
 COPY run.sh /home/minecraft/run.sh
