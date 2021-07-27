@@ -7,7 +7,7 @@ minecraft-tools/realms-download.sh
 echo "[DOWNLOAD COMPLETED]"
 
 # 更新がなければ終了
-aws s3 cp s3://mc-map1-util/last-world.md5 ./
+aws s3 cp s3://${UTIL_BUCKET}/last-world.md5 ./
 new_md5=`md5sum world.tar.gz`
 if [ -e last-world.md5 ]; then
     last_md5=`cat last-world.md5`
@@ -18,7 +18,7 @@ if [ -e last-world.md5 ]; then
 fi
 echo "[WORLD UPDATE DETECTED]"
 echo $new_md5 > last_md5
-aws s3 cp last_md5 s3://mc-map1-util/last-world.md5
+aws s3 cp last_md5 s3://${UTIL_BUCKET}/last-world.md5
 
 # レンダリング（マップ生成）
 mv world.tar.gz server/
@@ -32,6 +32,6 @@ bash minecraft-tools/overviewer/insert-google-key.sh render/ $GOOGLE_MAP_API_KEY
 echo "[RENDERING COMPLETED]"
 
 # デプロイ
-aws s3 sync render/ s3://mc-map1/
+aws s3 sync render/ s3://${WEB_BUCKET}/
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 echo "[DEPLOY COMPLETED]"
