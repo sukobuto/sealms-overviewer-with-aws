@@ -11,7 +11,7 @@ aws s3 cp s3://${UTIL_BUCKET}/last-world.md5 ./
 new_md5=`md5sum world.tar.gz`
 if [ -e last-world.md5 ]; then
     last_md5=`cat last-world.md5`
-    if [ $last_md5 = $new_md5 ]; then
+    if [ "${last_md5}" = "${new_md5}" ]; then
         echo "[ALREADY UP TO DATE]"
         exit 0
     fi
