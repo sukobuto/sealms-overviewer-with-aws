@@ -33,5 +33,5 @@ echo "[RENDERING COMPLETED]"
 
 # デプロイ
 aws s3 sync render/ s3://mc-map1/
-aws cloudfront create-invalidation --distribution-id EN343715ZCV8 --paths "/*"
+aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 echo "[DEPLOY COMPLETED]"
