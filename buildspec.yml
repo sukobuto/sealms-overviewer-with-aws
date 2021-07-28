@@ -12,6 +12,7 @@ phases:
       - "echo VERSION=${VERSION}"
   build:
     commands:
+      // Docker Hub にログインしないとベースイメージの pull が rate limit に引っかかるのでログインする
       - "echo Logging in to Docker Hub..."
       - "echo $DOCKERHUB_ACCESS_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin"
       - "echo Logging in to Amazon ECR..."
