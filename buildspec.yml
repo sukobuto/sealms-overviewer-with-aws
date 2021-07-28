@@ -1,0 +1,18 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - "VERSION=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} | head -c 7)"
+      - "echo VERSION=${VERSION}"
+  build:
+    commands:
+      - "aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 717737607765.dkr.ecr.ap-northeast-1.amazonaws.com"
+      - "docker build -t mc-map1-mapmaker ."
+      - "docker tag mc-map1-mapmaker:latest 717737607765.dkr.ecr.ap-northeast-1.amazonaws.com/mc-map1-mapmaker:latest"
+      - "docker tag mc-map1-mapmaker:latest 717737607765.dkr.ecr.ap-northeast-1.amazonaws.com/mc-map1-mapmaker:${VERSION}"
+      - "docker push 717737607765.dkr.ecr.ap-northeast-1.amazonaws.com/mc-map1-mapmaker:latest"
+      - "docker push 717737607765.dkr.ecr.ap-northeast-1.amazonaws.com/mc-map1-mapmaker:${VERSION}"
+  post_build:
+    commands:
+      - echo Build completed on `date`
