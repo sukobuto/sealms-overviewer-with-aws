@@ -1,24 +1,37 @@
 #!/bin/bash
-set -o errexit
 
 # ワールドデータをダウンロード
-echo "[START DOWNLOAD WORLD]"
+echo "MCMAP> [START DOWNLOAD WORLD]"
+source credentials.sh
+if [ $? -e 2 ];then
+    echo "MCMAP> [LOGIN]"
+    source renew-credentials.sh
+fi
 minecraft-tools/realms-download.sh
-echo "[DOWNLOAD COMPLETED]"
+if [ $? -ne 0 ];then
+    echo "MCMAP> [RENEW TOKEN]"
+    source renew-credentials.sh
+    minecraft-tools/realms-download.sh
+    if [ $? -ne 0 ];then
+        echo "MCMAP> [ERROR: DOWNLOAD FAILED]"
+        exit 3
+    fi
+fi
+echo "MCMAP> [DOWNLOAD COMPLETED]"
 
-# 更新がなければ終了
+# 更新がなければ終了.. でもダウンロードするたびにハッシュ値変わるっぽい...
 aws s3 cp s3://${UTIL_BUCKET}/last-world.md5 ./
 new_md5=`md5sum world.tar.gz`
-echo "[NEW MD5] ${new_md5}"
+echo "MCMAP> [NEW MD5] ${new_md5}"
 if [ -e last-world.md5 ]; then
     last_md5=`cat last-world.md5`
-    echo "[LAST MD5] ${last_md5}"
+    echo "MCMAP> [LAST MD5] ${last_md5}"
     if [ "${last_md5}" = "${new_md5}" ]; then
-        echo "[ALREADY UP TO DATE]"
+        echo "MCMAP> [ALREADY UP TO DATE]"
         exit 0
     fi
 fi
-echo "[WORLD UPDATE DETECTED]"
+echo "MCMAP> [WORLD UPDATE DETECTED]"
 echo $new_md5 > last_md5
 aws s3 cp last_md5 s3://${UTIL_BUCKET}/last-world.md5
 
@@ -28,12 +41,35 @@ cd server
 tar xzf world.tar.gz
 rm world.tar.gz
 cd ..
-echo "[START RENDERING]"
+echo "MCMAP> [START RENDERING]"
+SECONDS=0
+
 bash render.sh
+if [ $? -ne 0 ];then
+    echo "MCMAP> [ERROR: RENDERING FAILED]"
+    exit 2
+fi
+
 bash minecraft-tools/overviewer/insert-google-key.sh render/ $GOOGLE_MAP_API_KEY
-echo "[RENDERING COMPLETED]"
+if [ $? -ne 0 ];then
+    echo "MCMAP> [ERROR: API KEY INSERET FAILED]"
+    exit 2
+fi
+
+echo "MCMAP> [RENDERING COMPLETED] elapsed=${SECONDS}"
 
 # デプロイ
+SECONDS=0
 aws s3 sync render/ s3://${WEB_BUCKET}/
+if [ $? -ne 0 ];then
+    echo "MCMAP> [ERROR: DEPLOY FAILED]"
+    exit 2
+fi
+
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
-echo "[DEPLOY COMPLETED]"
+if [ $? -ne 0 ];then
+    echo "MCMAP> [ERROR: CACHE INVALIDATION FAILED]"
+    exit 2
+fi
+
+echo "MCMAP> [DEPLOY COMPLETED] elapsed=${SECONDS}"
