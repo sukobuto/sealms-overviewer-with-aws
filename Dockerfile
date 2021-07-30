@@ -59,6 +59,8 @@ COPY config/config.py /home/minecraft/config.py
 COPY render.sh /home/minecraft/render.sh
 COPY download_url.py /home/minecraft/download_url.py
 COPY download_client.sh /home/minecraft/download_client.sh
+COPY renew-credentials.sh /home/minecraft/renew-credentials.sh
+COPY credentials.sh /home/minecraft/credentials.sh
 COPY run.sh /home/minecraft/run.sh
 RUN cd /home/minecraft && git clone https://github.com/air/minecraft-tools.git
 
