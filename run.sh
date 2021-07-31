@@ -3,10 +3,6 @@
 # ワールドデータをダウンロード
 echo "MCMAP> [START DOWNLOAD WORLD]"
 source credentials.sh
-if [ $? -e 2 ];then
-    echo "MCMAP> [LOGIN]"
-    source renew-credentials.sh
-fi
 minecraft-tools/realms-download.sh
 if [ $? -ne 0 ];then
     echo "MCMAP> [RENEW TOKEN]"
