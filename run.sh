@@ -1,5 +1,12 @@
 #!/bin/bash
 
+function notice () {
+    curl \
+        -H "Content-Type: application/json" \
+        -d '{"username": "mapmaker", "content": "'$1'"}' \
+        $DISCORD_WEBHOOK_URL
+}
+
 # ワールドデータをダウンロード
 echo "MCMAP> [START DOWNLOAD WORLD]"
 source credentials.sh
@@ -10,6 +17,7 @@ if [ $? -ne 0 ];then
     minecraft-tools/realms-download.sh
     if [ $? -ne 0 ];then
         echo "MCMAP> [ERROR: DOWNLOAD FAILED]"
+        notice $DISCORD_ERROR
         exit 3
     fi
 fi
@@ -24,6 +32,7 @@ if [ -e last-world.md5 ]; then
     echo "MCMAP> [LAST MD5] ${last_md5}"
     if [ "${last_md5}" = "${new_md5}" ]; then
         echo "MCMAP> [ALREADY UP TO DATE]"
+        notice "更新なかったっぽい"
         exit 0
     fi
 fi
@@ -43,12 +52,14 @@ SECONDS=0
 bash render.sh
 if [ $? -ne 0 ];then
     echo "MCMAP> [ERROR: RENDERING FAILED]"
+    notice $DISCORD_ERROR
     exit 2
 fi
 
 bash minecraft-tools/overviewer/insert-google-key.sh render/ $GOOGLE_MAP_API_KEY
 if [ $? -ne 0 ];then
     echo "MCMAP> [ERROR: API KEY INSERET FAILED]"
+    notice $DISCORD_ERROR
     exit 2
 fi
 
@@ -59,13 +70,16 @@ SECONDS=0
 aws s3 sync render/ s3://${WEB_BUCKET}/
 if [ $? -ne 0 ];then
     echo "MCMAP> [ERROR: DEPLOY FAILED]"
+    notice $DISCORD_ERROR
     exit 2
 fi
 
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 if [ $? -ne 0 ];then
     echo "MCMAP> [ERROR: CACHE INVALIDATION FAILED]"
+    notice $DISCORD_ERROR
     exit 2
 fi
 
 echo "MCMAP> [DEPLOY COMPLETED] elapsed=${SECONDS}"
+notice $DISCORD_SUCCESS
