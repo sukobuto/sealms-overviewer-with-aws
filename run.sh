@@ -67,7 +67,7 @@ echo "MCMAP> [RENDERING COMPLETED] elapsed=${SECONDS}"
 
 # デプロイ
 SECONDS=0
-aws s3 sync render/ s3://${WEB_BUCKET}/
+aws s3 sync render/ s3://${WEB_BUCKET}/ --delete
 if [ $? -ne 0 ];then
     echo "MCMAP> [ERROR: DEPLOY FAILED]"
     notice $DISCORD_ERROR
