@@ -8,22 +8,10 @@ function notice () {
 }
 
 # ワールドデータをダウンロード
-echo "MCMAP> [START DOWNLOAD WORLD]"
-source credentials.sh
-minecraft-tools/realms-download.sh
-if [ $? -ne 0 ];then
-    echo "MCMAP> [RENEW TOKEN]"
-    source renew-credentials.sh
-    minecraft-tools/realms-download.sh
-    if [ $? -ne 0 ];then
-        echo "MCMAP> [ERROR: DOWNLOAD FAILED]"
-        notice $DISCORD_ERROR
-        exit 3
-    fi
-fi
-echo "MCMAP> [DOWNLOAD COMPLETED]"
+echo "MCMAP> [GET WORLD]"
+aws s3 cp s3://${UTIL_BUCKET}/world.tar.gz world.tar.gz
 
-# 更新がなければ終了.. でもダウンロードするたびにハッシュ値変わるっぽい...
+# 更新がなければ終了
 aws s3 cp s3://${UTIL_BUCKET}/last-world.md5 ./
 new_md5=`md5sum world.tar.gz`
 echo "MCMAP> [NEW MD5] ${new_md5}"
@@ -47,6 +35,7 @@ tar xzf world.tar.gz
 rm world.tar.gz
 cd ..
 echo "MCMAP> [START RENDERING]"
+notice "マップ生成しまぁす"
 SECONDS=0
 
 bash render.sh
